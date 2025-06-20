@@ -1,33 +1,33 @@
 package com.studentManagement.Student.Center.service;
 
+import com.mongodb.DuplicateKeyException;
 import com.studentManagement.Student.Center.entity.Student;
-import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
+import com.studentManagement.Student.Center.repository.StudentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Component
 public class StudentService {
 
-
-    public List<Student> studentList = new ArrayList<>();
+    @Autowired
+    private StudentRepository studentRepository;
 
     //get all student
     public ResponseEntity<?> getAllStudents() {
-        if (studentList.isEmpty()){
+        if (studentRepository.findAll().isEmpty()){
             return new ResponseEntity<>("no students added" , HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(studentList , HttpStatus.OK);
+        return new ResponseEntity<>(studentRepository.findAll() , HttpStatus.OK);
     }
 
     //get student by id
     public ResponseEntity<?> getStudentById(String id) {
 
-        Optional<Student> x = studentList.stream()
+        Optional<Student> x = studentRepository.findAll().stream()
                 .filter(student -> student.getRoll().equals(id))
                 .findFirst();
         if (x.isPresent()){
@@ -36,45 +36,43 @@ public class StudentService {
         else return new ResponseEntity<>("no such student with supplied id present",HttpStatus.NOT_FOUND);
 
     }
-
     // add new student
     public ResponseEntity<?> addStudent(Student student) {
+        if (studentRepository.existsById(student.getRoll())) {
+            return new ResponseEntity<>("Student with this roll number already exists", HttpStatus.CONFLICT);
+        }
+
         try {
-            studentList.add(student);
-            return new ResponseEntity<>("successfully added", HttpStatus.OK);
+            studentRepository.save(student);
+            return new ResponseEntity<>("Student added successfully", HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage() , HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     //update a student by id
     public ResponseEntity<?> updateStudent(String id, Student updatedStudent) {
-        for (int i = 0; i < studentList.size(); i++) {
-            Student s = studentList.get(i);
-            if (s.getRoll().equals(id)) {
-                studentList.set(i, updatedStudent);
-                return new ResponseEntity<>("updated successfully" , HttpStatus.OK);
-            }
+
+        Optional<Student> existingStudent = studentRepository.findById(id);
+
+        if (existingStudent.isPresent()) {
+            // ensure ID is correct (since MongoDB uses it as key)
+            updatedStudent.setRoll(id);
+            studentRepository.save(updatedStudent);
+            return new ResponseEntity<>("Updated successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Student not found", HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>("Something went wrong" , HttpStatus.BAD_REQUEST);
     }
 
     //delete student
     public ResponseEntity<?> deleteStudent(String id) {
-
-        try {
-            boolean isRemoved = studentList.removeIf(student -> student.getRoll().equals(id));
-            if (isRemoved){
-                return new ResponseEntity<>("deleted successfully" , HttpStatus.OK);
-            }
-            else return new ResponseEntity<>("no student with supplied id present" , HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {}
-
-        return new ResponseEntity<>("something went wrong" , HttpStatus.BAD_REQUEST);
+        if (studentRepository.existsById(id)) {
+            studentRepository.deleteById(id);
+            return new ResponseEntity<>("Deleted successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Student not found", HttpStatus.NOT_FOUND);
+        }
 
     }
-
-
-
-
 }
