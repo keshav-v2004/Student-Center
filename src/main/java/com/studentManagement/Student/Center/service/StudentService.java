@@ -1,13 +1,17 @@
 package com.studentManagement.Student.Center.service;
 
-import com.mongodb.DuplicateKeyException;
 import com.studentManagement.Student.Center.entity.Student;
 import com.studentManagement.Student.Center.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -74,5 +78,21 @@ public class StudentService {
             return new ResponseEntity<>("Student not found", HttpStatus.NOT_FOUND);
         }
 
+    }
+
+    // find all students by branch
+    public List<Student> findByBranch(String branch){
+        return studentRepository.findByBranch(branch);
+    }
+
+    // find by name
+    public List<Student> findByName(String name){
+        return studentRepository.findByName(name);
+    }
+
+    //get paginated students
+    public Page<Student> getPaginatedStudents(int page, int size, String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        return studentRepository.findAll(pageable);
     }
 }
