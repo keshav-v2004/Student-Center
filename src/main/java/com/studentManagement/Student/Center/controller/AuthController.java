@@ -1,5 +1,6 @@
 package com.studentManagement.Student.Center.controller;
 
+import com.studentManagement.Student.Center.dto.AuthRequest;
 import com.studentManagement.Student.Center.dto.RegisterRequest;
 import com.studentManagement.Student.Center.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,5 +20,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+        return authService.login(request);
     }
 }
