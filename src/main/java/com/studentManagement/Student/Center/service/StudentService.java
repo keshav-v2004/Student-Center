@@ -1,5 +1,6 @@
 package com.studentManagement.Student.Center.service;
 
+import com.studentManagement.Student.Center.entity.Course;
 import com.studentManagement.Student.Center.entity.Student;
 import com.studentManagement.Student.Center.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,5 +95,86 @@ public class StudentService {
     public Page<Student> getPaginatedStudents(int page, int size, String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return studentRepository.findAll(pageable);
+    }
+
+    // courses added for each student form here
+
+    //get all courses of a student
+    public ResponseEntity<?> getCoursesOfStudent(String roll) {
+        Optional<Student> studentOpt = studentRepository.findById(roll);
+
+        if (studentOpt.isPresent()) {
+            return ResponseEntity.ok(studentOpt.get().getCourses());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Student with roll " + roll + " not found");
+        }
+    }
+
+    // add a course to a student
+    public ResponseEntity<?> addCourseToStudent(String roll, Course course) {
+        Optional<Student> studentOpt = studentRepository.findById(roll);
+
+        if (studentOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+        }
+
+        Student student = studentOpt.get();
+        boolean exists = student.getCourses().stream()
+                .anyMatch(c -> c.getCourseId().equals(course.getCourseId()));
+
+        if (exists) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Course with ID " + course.getCourseId() + " already exists");
+        }
+
+        student.getCourses().add(course);
+        studentRepository.save(student);
+
+        return ResponseEntity.ok("Course added successfully");
+    }
+
+    // remove a course from a student
+    public ResponseEntity<?> removeCourseFromStudent(String roll, String courseId) {
+        Optional<Student> studentOpt = studentRepository.findById(roll);
+
+        if (studentOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+        }
+
+        Student student = studentOpt.get();
+
+        boolean removed = student.getCourses()
+                .removeIf(c -> c.getCourseId().equals(courseId));
+
+        if (!removed) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Course not found");
+        }
+
+        studentRepository.save(student);
+        return ResponseEntity.ok("Course removed successfully");
+    }
+
+
+    // update course of a student
+    public ResponseEntity<?> updateCourseOfStudent(String roll, String courseId, Course updatedCourse) {
+        Optional<Student> studentOpt = studentRepository.findById(roll);
+
+        if (studentOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+        }
+
+        Student student = studentOpt.get();
+        List<Course> courses = student.getCourses();
+
+        for (int i = 0; i < courses.size(); i++) {
+            if (courses.get(i).getCourseId().equals(courseId)) {
+                courses.set(i, updatedCourse);
+                studentRepository.save(student);
+                return ResponseEntity.ok("Course updated successfully");
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Course not found");
     }
 }
