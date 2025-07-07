@@ -1,11 +1,15 @@
 package com.studentManagement.Student.Center.entity;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Getter
@@ -23,5 +27,6 @@ public class Student {
     @NotBlank(message = "Branch must not be blank")
     private String branch;
 
-
+    @Valid
+    private List<Course> courses = new ArrayList<>();
 }
