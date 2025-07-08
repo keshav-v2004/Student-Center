@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -38,6 +39,11 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword())); // Encrypt
 
+        // Set role
+        user.setRole(
+                request.getRole() != null ? request.getRole() : "ROLE_USER"
+        );
+
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully");
     }
@@ -61,5 +67,30 @@ public class AuthService {
         //  Generate JWT token
         String token = jwtUtil.generateToken(user.getUsername());
         return ResponseEntity.ok(new AuthResponse(token));
+    }
+
+    //delete a user (possible by admin only)
+    public ResponseEntity<?> deleteUser(String username) {
+        Optional<User> optionalUser = userRepository.findByUsername(username);
+
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found with username: " + username);
+        }
+
+        userRepository.delete(optionalUser.get());
+
+        return ResponseEntity.ok("User deleted successfully");
+    }
+
+    //show all users to admin only
+    public ResponseEntity<?> getAllUsers() {
+        List<User> users = userRepository.findAll();
+
+        if (users.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No users found");
+        }
+
+        return ResponseEntity.ok(users);
     }
 }

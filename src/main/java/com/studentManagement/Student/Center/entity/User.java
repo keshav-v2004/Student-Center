@@ -24,4 +24,6 @@ public class User {
 
     @NotBlank
     private String password; // stored as hashed (BCrypt)
+
+    private String role; // e.g., "ROLE_USER" or "ROLE_ADMIN"
 }
