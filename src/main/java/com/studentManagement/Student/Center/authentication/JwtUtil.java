@@ -3,6 +3,7 @@ package com.studentManagement.Student.Center.authentication;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -12,7 +13,8 @@ import java.util.Date;
 public class JwtUtil {
 
     // Secret key must be at least 256 bits (32 characters for HS256)
-    private final String SECRET_KEY = "my-secret-key-for-jwt-token-123456";
+    @Value("${JWT_SECRET}")
+    private String SECRET_KEY;
 
     //  Generate key object from secret string
     //Converts the String secret key into a Key object using hmacShaKeyFor(...).
